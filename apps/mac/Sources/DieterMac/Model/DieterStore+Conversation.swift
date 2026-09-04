@@ -61,6 +61,7 @@ extension DieterStore {
         }
         selectedCardID = opensChat ? nil : cardID
         selectedChatID = opensChat ? cardID : nil
+        if opensChat { lastUsedChatID = cardID }
         if opensChat { newChatProjectID = "" }
         resetConversationHistory()
         conversationTask?.cancel()

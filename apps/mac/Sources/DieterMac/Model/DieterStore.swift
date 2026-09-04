@@ -65,6 +65,7 @@ final class DieterStore {
     }
     var selectedCardID: String?
     var selectedChatID: String?
+    var lastUsedChatID: String?
     var conversation: Dieter_V1_ConversationSnapshot? {
         didSet {
             guard conversation != oldValue else { return }
