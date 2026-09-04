@@ -278,6 +278,9 @@ itself. Proxy mode requires a loopback listener and an HTTPS
 Supported models and provider options live in
 [`config/harnesses.yaml`](config/harnesses.yaml). Override the registry with
 `$DIETER_HOME/harnesses.yaml`, `DIETER_HARNESS_CONFIG`, or `--harness-config`.
+An optional model `defaultEffort` is Dieter's default for new conversations and
+overrides the provider-discovered default when that model supports the selected
+level. Pass `--effort default` to explicitly use the provider's native default.
 
 ## Development
 

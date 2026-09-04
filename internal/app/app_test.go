@@ -574,6 +574,44 @@ func TestCreateRunningCardStartsHarnessWithBoardInstructions(t *testing.T) {
 	}
 }
 
+func TestNewConversationUsesConfiguredModelEffortByDefault(t *testing.T) {
+	service, fake, project, board := appSetup(t)
+	card, err := service.CreateCard(context.Background(), CardInput{
+		Project: project.ID, Board: board.ID, Lane: model.LaneRunning,
+		Title: "Think deeply", Prompt: "Solve it", Provider: "codex", Model: "gpt-5.6-sol",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { return fake.count() == 1 && !hasActiveTurn(service, project.ID) })
+	stored, err := service.Store.ResolveCard(card.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Effort != "xhigh" || fake.request(0).Effort != "xhigh" {
+		t.Fatalf("stored effort=%q request effort=%q", stored.Effort, fake.request(0).Effort)
+	}
+}
+
+func TestNewConversationCanExplicitlyUseProviderDefaultEffort(t *testing.T) {
+	service, fake, project, board := appSetup(t)
+	card, err := service.CreateCard(context.Background(), CardInput{
+		Project: project.ID, Board: board.ID, Lane: model.LaneRunning,
+		Title: "Use provider default", Prompt: "Solve it", Provider: "codex", Model: "gpt-5.6-sol", Effort: "default",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { return fake.count() == 1 && !hasActiveTurn(service, project.ID) })
+	stored, err := service.Store.ResolveCard(card.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Effort != "" || fake.request(0).Effort != "" {
+		t.Fatalf("stored effort=%q request effort=%q", stored.Effort, fake.request(0).Effort)
+	}
+}
+
 func TestCreateRunningCardUsesTitleAsInitialTaskWhenPromptIsEmpty(t *testing.T) {
 	service, fake, project, board := appSetup(t)
 	card, err := service.CreateCard(context.Background(), CardInput{

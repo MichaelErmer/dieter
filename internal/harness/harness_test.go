@@ -130,7 +130,8 @@ func TestCatalogIncludesCurrentCodexRegistry(t *testing.T) {
 			t.Fatalf("model %d=%q want %q", index, codex.Models[index].ID, id)
 		}
 	}
-	if codex.Effort == nil || codex.Effort.Label != "Reasoning" || len(codex.Effort.Options) != 3 || codex.Models[0].DefaultEffort != "medium" {
+	if codex.Effort == nil || codex.Effort.Label != "Reasoning" || len(codex.Effort.Options) != 4 ||
+		codex.Models[0].DefaultEffort != "medium" || codex.Models[1].DefaultEffort != "xhigh" {
 		t.Fatalf("codex effort catalog=%#v", codex)
 	}
 }
@@ -143,8 +144,8 @@ func TestConfiguredEffortValidationIsProviderAndModelAware(t *testing.T) {
 	if effort, err := ResolveEffort(codex, sol, "high"); err != nil || effort != "high" {
 		t.Fatalf("codex high effort=%q err=%v", effort, err)
 	}
-	if _, err := ResolveEffort(codex, sol, "xhigh"); err == nil || !strings.Contains(err.Error(), "not supported") {
-		t.Fatalf("codex xhigh err=%v", err)
+	if effort, err := ResolveEffort(codex, sol, "xhigh"); err != nil || effort != "xhigh" {
+		t.Fatalf("codex xhigh effort=%q err=%v", effort, err)
 	}
 	if _, err := ResolveEffort(codex, sol, "max"); err == nil || !strings.Contains(err.Error(), "not supported") {
 		t.Fatalf("codex max err=%v", err)

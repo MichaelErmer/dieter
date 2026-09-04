@@ -413,6 +413,12 @@ func (s *Service) createConversation(ctx context.Context, input CardInput, scope
 		return model.Card{}, err
 	}
 	provider, input.Model = adapter.ID, configuredModel.ID
+	// A blank selection means Dieter's configured default for a new
+	// conversation. The explicit "default" sentinel still reaches
+	// ResolveEffort and opts back into the provider's native default.
+	if strings.TrimSpace(input.Effort) == "" {
+		input.Effort = configuredModel.DefaultEffort
+	}
 	input.Effort, err = harness.ResolveEffort(adapter, configuredModel, input.Effort)
 	if err != nil {
 		return model.Card{}, err
