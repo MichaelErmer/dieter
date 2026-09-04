@@ -48,6 +48,17 @@ struct ConversationView: View {
         (store.selectedCard ?? store.selectedDetail?.card)?.scope == "chat"
     }
 
+    private var card: Dieter_V1_Card? { store.selectedCard ?? store.selectedDetail?.card }
+    private var startingCard: Bool { card.map { store.pendingCardStarts[$0.id] != nil } ?? false }
+    private var canStartCard: Bool {
+        guard let card else { return false }
+        return BoardCardStartPolicy.canStart(
+            card,
+            board: store.selectedDetail?.board ?? store.selectedBoard,
+            hasDraftAttachments: !(store.conversation?.conversation.draftAttachments.isEmpty ?? true)
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ConversationChrome(compact: compact, standalone: standalone, tab: $tab)
@@ -72,6 +83,9 @@ struct ConversationView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if tab == "Conversation" {
+                if let card, canStartCard || startingCard {
+                    ConversationStartCardBanner(card: card, starting: startingCard)
+                }
                 ConversationComposer(fileImporterPresented: $fileImporterPresented)
             }
         }
@@ -101,6 +115,38 @@ struct ConversationView: View {
         .attachmentPasteCatcher { pasteboard in
             store.attachPasteboard(pasteboard)
         }
+    }
+}
+
+private struct ConversationStartCardBanner: View {
+    @Environment(DieterStore.self) private var store
+    let card: Dieter_V1_Card
+    let starting: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Ready to run").font(.system(size: 12, weight: .semibold))
+                Text(starting ? "Starting the saved task…" : "Run the saved task and move this card to Running.")
+                    .font(.caption).foregroundStyle(DieterTheme.tertiary)
+            }
+            Spacer()
+            Button {
+                Task { await store.start(card) }
+            } label: {
+                HStack(spacing: 6) {
+                    if starting { ProgressView().controlSize(.mini) }
+                    else { Image(systemName: "play.fill").font(.system(size: 9, weight: .bold)) }
+                    Text(starting ? "Starting…" : "Run task")
+                }
+            }
+            .buttonStyle(DieterPrimaryButtonStyle())
+            .disabled(starting)
+            .accessibilityIdentifier("conversation-run-card")
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(DieterTheme.shellDeep.opacity(0.08))
+        .overlay(alignment: .top) { Divider().overlay(DieterTheme.border) }
     }
 }
 

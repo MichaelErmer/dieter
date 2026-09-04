@@ -181,6 +181,59 @@ private actor ChatPinRPCStub: DieterChatPinRPC {
     func recordedRequests() -> [Dieter_V1_PinChatRequest] { requests }
 }
 
+private actor CardStartRPCStub: DieterCardStartRPC {
+    private var requests: [Dieter_V1_StartCardRequest] = []
+
+    func startCard(_ request: Dieter_V1_StartCardRequest) async throws -> Dieter_V1_StartCardResponse {
+        requests.append(request)
+        var card = Dieter_V1_Card()
+        card.id = request.cardID
+        card.projectID = "p_dieter"
+        card.boardID = "b_main"
+        card.scope = "board"
+        card.lane = "running"
+        card.initialPrompt = "Verify the Mac start flow"
+        card.initialPromptSentAt = "2026-09-04T19:00:00Z"
+        card.runtime = "starting"
+        var response = Dieter_V1_StartCardResponse()
+        response.card = card
+        response.accepted = true
+        response.commandID = request.commandID
+        return response
+    }
+
+    func recordedRequests() -> [Dieter_V1_StartCardRequest] { requests }
+}
+
+@Test @MainActor func runningATodoCardAdmitsItsInitialTask() async throws {
+    let rpc = CardStartRPCStub()
+    let store = DieterStore(cardStartRPCOverride: rpc, restoreSync: false)
+    var todo = Dieter_V1_Lane(); todo.id = "todo"; todo.name = "Todo"
+    var running = Dieter_V1_Lane(); running.id = "running"; running.name = "Running"
+    var board = Dieter_V1_Board(); board.id = "b_main"; board.projectID = "p_dieter"; board.lanes = [todo, running]
+    var card = Dieter_V1_Card()
+    card.id = "c_task"
+    card.projectID = "p_dieter"
+    card.boardID = board.id
+    card.scope = "board"
+    card.lane = "todo"
+    card.initialPrompt = "Verify the Mac start flow"
+    store.selectedProjectID = card.projectID
+    store.selectedBoardID = board.id
+    store.state.boards = [board]
+    store.state.cards = [card]
+
+    await store.start(card)
+
+    let request = try #require(await rpc.recordedRequests().first)
+    #expect(request.cardID == card.id)
+    #expect(!request.clientID.isEmpty)
+    #expect(!request.commandID.isEmpty)
+    #expect(store.state.cards.first?.lane == "running")
+    #expect(store.state.cards.first?.initialPromptSentAt == "2026-09-04T19:00:00Z")
+    #expect(store.pendingCardStarts[card.id] != nil)
+}
+
 @Test @MainActor func pinningAndUnpinningAChatUpdatesTheMacProjectionImmediately() async throws {
     let rpc = ChatPinRPCStub()
     let store = DieterStore(chatPinRPCOverride: rpc)
@@ -2396,6 +2449,62 @@ private func historyTextMessage(_ id: String, role: String = "assistant") -> Die
     card.initialPromptSentAt = ""
     card.initialPrompt = "   "
     #expect(!BoardCardEditingPolicy.canEditDraft(card))
+}
+
+@Test func onlyNeverStartedTodoCardsExposeTheRunAction() throws {
+    var todo = Dieter_V1_Lane(); todo.id = "todo"; todo.name = "Todo"
+    var active = Dieter_V1_Lane(); active.id = "active"; active.name = "Running"
+    var board = Dieter_V1_Board(); board.lanes = [todo, active]
+    var card = Dieter_V1_Card()
+    card.scope = "board"
+    card.lane = "todo"
+    card.initialPrompt = "Run the saved task"
+
+    #expect(BoardCardStartPolicy.canStart(card, board: board))
+    #expect(BoardCardStartPolicy.runningLaneID(in: board) == "active")
+    let optimistic = try #require(BoardCardStartPolicy.optimisticCard(card, board: board))
+    #expect(optimistic.lane == "active")
+    #expect(optimistic.runtime == "starting")
+
+    card.initialPromptSentAt = "2026-09-04T19:00:00Z"
+    #expect(!BoardCardStartPolicy.canStart(card, board: board))
+    card.initialPromptSentAt = ""
+    card.lane = "review"
+    #expect(!BoardCardStartPolicy.canStart(card, board: board))
+    card.lane = "todo"
+    card.scope = "chat"
+    #expect(!BoardCardStartPolicy.canStart(card, board: board))
+}
+
+@Test func optimisticCardStartsSurviveStaleBoardFramesUntilAdmissionIsVisible() {
+    var stale = Dieter_V1_Card()
+    stale.id = "card-start"
+    stale.lane = "todo"
+    stale.runtime = "idle"
+    let start = OptimisticCardStart(operationID: UUID(), runningLaneID: "running")
+
+    let projected = OptimisticCardProjection.reconcile(
+        cards: [stale],
+        moves: [:],
+        labels: [:],
+        starts: [stale.id: start]
+    )
+    #expect(projected.cards[0].lane == "running")
+    #expect(projected.cards[0].runtime == "starting")
+    #expect(projected.starts[stale.id] == start)
+
+    var admitted = stale
+    admitted.lane = "running"
+    admitted.runtime = "starting"
+    admitted.initialPromptSentAt = "2026-09-04T19:00:00Z"
+    let synchronized = OptimisticCardProjection.reconcile(
+        cards: [admitted],
+        moves: [:],
+        labels: [:],
+        starts: projected.starts
+    )
+    #expect(synchronized.cards[0] == admitted)
+    #expect(synchronized.starts.isEmpty)
 }
 
 @Test func embeddedMacImageAttachmentsProvidePreviewImages() throws {
