@@ -229,6 +229,15 @@ dieter project open ~/Development/my-project
 dieter daemon start
 ```
 
+Create a story-only quick task with the same daemon-side GPT Spark title
+generation used by the native Kanban popover:
+
+```sh
+dieter card create --project PROJECT --board BOARD --lane todo \
+  --auto-title --prompt "Add keyboard navigation to the board" \
+  --workspace worktree
+```
+
 To reach it through your gateway, enroll the machine once:
 
 ```sh

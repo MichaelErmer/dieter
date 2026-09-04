@@ -101,6 +101,12 @@ dieter board create --project <project-id> --name Delivery --workflow review
 dieter card create --project <project-id> --board <board-id> \
   --lane todo --title "Implement recovery" --prompt-file task.md \
   --workspace worktree --format id
+
+# Story-only quick task: GPT Spark generates the persisted title while the
+# normal card defaults remain unchanged.
+dieter card create --project <project-id> --board <board-id> \
+  --lane todo --auto-title --prompt "Add keyboard navigation" \
+  --workspace worktree --format id
 ```
 
 `card start` admits a draft's first turn. `card send` admits a human follow-up.

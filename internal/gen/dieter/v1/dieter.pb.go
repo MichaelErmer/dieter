@@ -6105,8 +6105,11 @@ type CreateConversationRequest struct {
 	WorkspaceMode       string                 `protobuf:"bytes,15,opt,name=workspace_mode,json=workspaceMode,proto3" json:"workspace_mode,omitempty"`
 	WorkspaceBranch     string                 `protobuf:"bytes,16,opt,name=workspace_branch,json=workspaceBranch,proto3" json:"workspace_branch,omitempty"`
 	WorkspaceBaseBranch string                 `protobuf:"bytes,17,opt,name=workspace_base_branch,json=workspaceBaseBranch,proto3" json:"workspace_base_branch,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Generate the persisted title from prompt with Dieter's fast title model.
+	// Clients may still send a local placeholder in title for optimistic UI.
+	AutoGenerateTitle bool `protobuf:"varint,18,opt,name=auto_generate_title,json=autoGenerateTitle,proto3" json:"auto_generate_title,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CreateConversationRequest) Reset() {
@@ -6256,6 +6259,13 @@ func (x *CreateConversationRequest) GetWorkspaceBaseBranch() string {
 		return x.WorkspaceBaseBranch
 	}
 	return ""
+}
+
+func (x *CreateConversationRequest) GetAutoGenerateTitle() bool {
+	if x != nil {
+		return x.AutoGenerateTitle
+	}
+	return false
 }
 
 type ListChatsRequest struct {
@@ -15470,7 +15480,7 @@ const file_dieter_v1_dieter_proto_rawDesc = "" +
 	"\blabel_id\x18\x02 \x01(\tR\alabelId\"2\n" +
 	"\fEffortOption\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\xc5\x05\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\xf5\x05\n" +
 	"\x19CreateConversationRequest\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x19\n" +
@@ -15492,7 +15502,8 @@ const file_dieter_v1_dieter_proto_rawDesc = "" +
 	"\vattachments\x18\x0e \x03(\v2\x16.dieter.v1.MessagePartR\vattachments\x12%\n" +
 	"\x0eworkspace_mode\x18\x0f \x01(\tR\rworkspaceMode\x12)\n" +
 	"\x10workspace_branch\x18\x10 \x01(\tR\x0fworkspaceBranch\x122\n" +
-	"\x15workspace_base_branch\x18\x11 \x01(\tR\x13workspaceBaseBranch\x1aB\n" +
+	"\x15workspace_base_branch\x18\x11 \x01(\tR\x13workspaceBaseBranch\x12.\n" +
+	"\x13auto_generate_title\x18\x12 \x01(\bR\x11autoGenerateTitle\x1aB\n" +
 	"\x14ProviderOptionsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"=\n" +

@@ -630,6 +630,47 @@ func TestCreateRunningCardUsesTitleAsInitialTaskWhenPromptIsEmpty(t *testing.T) 
 	}
 }
 
+func TestCreateQuickTaskGeneratesTitleWithSparkAndKeepsConversationDefaults(t *testing.T) {
+	service, fake, project, board := appSetup(t)
+	card, err := service.CreateCard(context.Background(), CardInput{
+		Project: project.ID, Board: board.ID, Lane: model.LaneTodo,
+		Title: "Optimistic placeholder", Prompt: "Add keyboard navigation to every Kanban lane.",
+		WorkspaceMode: model.WorkspaceModeWorktree, AutoGenerateTitle: true, DeferStart: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if card.Title != "done" || card.InitialPrompt != "Add keyboard navigation to every Kanban lane." {
+		t.Fatalf("card=%#v", card)
+	}
+	if card.Provider != "codex" || card.Model != "gpt-5.6-sol" || card.Lane != model.LaneTodo || card.WorkspaceMode != model.WorkspaceModeWorktree {
+		t.Fatalf("quick task did not retain defaults: %#v", card)
+	}
+	if fake.count() != 1 {
+		t.Fatalf("title runner requests=%d", fake.count())
+	}
+	request := fake.request(0)
+	if request.Harness != "codex" || request.ConfiguredModel != quickTaskTitleModel || request.Effort != "high" || !strings.Contains(request.Prompt, "keyboard navigation") {
+		t.Fatalf("title request=%#v", request)
+	}
+	if request.ProjectPath == project.Path || !strings.Contains(request.Instructions, "do not use tools") {
+		t.Fatalf("title generation was not isolated: %#v", request)
+	}
+	if _, statErr := os.Stat(request.ProjectPath); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("temporary title workspace still exists: %v", statErr)
+	}
+}
+
+func TestNormalizeQuickTaskTitleRemovesModelFormattingAndBoundsLength(t *testing.T) {
+	if got := normalizeQuickTaskTitle("  ## Title: “Add keyboard board navigation.”\nExtra explanation  "); got != "Add keyboard board navigation" {
+		t.Fatalf("normalized title=%q", got)
+	}
+	long := strings.Repeat("accessible ", 12)
+	if got := normalizeQuickTaskTitle(long); len([]rune(got)) > quickTaskTitleMaxRunes || strings.HasSuffix(got, " ") {
+		t.Fatalf("bounded title=%q (%d runes)", got, len([]rune(got)))
+	}
+}
+
 func TestCreateRunningCardCanDeferStartToStreamingClient(t *testing.T) {
 	service, fake, project, board := appSetup(t)
 	card, err := service.CreateCard(context.Background(), CardInput{

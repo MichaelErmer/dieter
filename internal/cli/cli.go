@@ -1132,10 +1132,11 @@ func splitCSV(value string) []string {
 }
 
 func (c *CLI) cardCreate(args []string) error {
-	const usage = `Usage: dieter card create --project PROJECT --board BOARD --title TITLE [options]
+	const usage = `Usage: dieter card create --project PROJECT --board BOARD (--title TITLE | --auto-title) [options]
 
 Options:
   --lane todo|running    Todo saves a draft; Running sends immediately
+  --auto-title           Generate the title from the task brief with GPT Spark
   --prompt TEXT          Initial task brief
   --prompt-file FILE     Read the task brief from a file or -
   --attach FILE          Attach an image or file (repeat up to 4 times)
@@ -1152,6 +1153,7 @@ Options:
 	project := set.String("project", "", "project")
 	board := set.String("board", "", "board")
 	title := set.String("title", "", "title")
+	autoTitle := set.Bool("auto-title", false, "generate title from task brief with GPT Spark")
 	lane := set.String("lane", model.LaneTodo, "lane")
 	prompt := set.String("prompt", "", "prompt")
 	file := set.String("prompt-file", "", "prompt file")
@@ -1176,6 +1178,12 @@ Options:
 	if err != nil {
 		return err
 	}
+	if strings.TrimSpace(*title) == "" && !*autoTitle {
+		return errors.New("--title is required unless --auto-title is set")
+	}
+	if *autoTitle && strings.TrimSpace(value) == "" {
+		return errors.New("--prompt or --prompt-file is required with --auto-title")
+	}
 	parts, err := attachmentParts(attachmentFiles)
 	if err != nil {
 		return err
@@ -1184,6 +1192,7 @@ Options:
 		Project: *project, Board: *board, Lane: *lane, Title: *title, Prompt: value,
 		Provider: *provider, Model: *modelName, Effort: *effort, LabelIDs: splitCSV(*labels), Attachments: parts,
 		WorkspaceMode: *workspaceMode, WorkspaceBranch: *workspaceBranch, WorkspaceBaseBranch: *workspaceBaseBranch,
+		AutoGenerateTitle: *autoTitle,
 	})
 	if err != nil {
 		return err

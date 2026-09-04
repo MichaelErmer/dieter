@@ -2447,6 +2447,13 @@ public nonisolated struct Dieter_V1_CreateConversationRequest: @unchecked Sendab
     set {_uniqueStorage()._workspaceBaseBranch = newValue}
   }
 
+  /// Generate the persisted title from prompt with Dieter's fast title model.
+  /// Clients may still send a local placeholder in title for optimistic UI.
+  public var autoGenerateTitle: Bool {
+    get {_storage._autoGenerateTitle}
+    set {_uniqueStorage()._autoGenerateTitle = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -9872,7 +9879,7 @@ nonisolated extension Dieter_V1_EffortOption: SwiftProtobuf.Message, SwiftProtob
 
 nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CreateConversationRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}project_id\0\u{3}board_id\0\u{1}lane\0\u{1}title\0\u{1}prompt\0\u{1}provider\0\u{1}model\0\u{1}effort\0\u{3}label_ids\0\u{3}defer_start\0\u{3}provider_options\0\u{3}client_id\0\u{3}command_id\0\u{1}attachments\0\u{3}workspace_mode\0\u{3}workspace_branch\0\u{3}workspace_base_branch\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}project_id\0\u{3}board_id\0\u{1}lane\0\u{1}title\0\u{1}prompt\0\u{1}provider\0\u{1}model\0\u{1}effort\0\u{3}label_ids\0\u{3}defer_start\0\u{3}provider_options\0\u{3}client_id\0\u{3}command_id\0\u{1}attachments\0\u{3}workspace_mode\0\u{3}workspace_branch\0\u{3}workspace_base_branch\0\u{3}auto_generate_title\0")
 
   fileprivate class _StorageClass {
     var _projectID: String = String()
@@ -9892,6 +9899,7 @@ nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message
     var _workspaceMode: String = String()
     var _workspaceBranch: String = String()
     var _workspaceBaseBranch: String = String()
+    var _autoGenerateTitle: Bool = false
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -9919,6 +9927,7 @@ nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message
       _workspaceMode = source._workspaceMode
       _workspaceBranch = source._workspaceBranch
       _workspaceBaseBranch = source._workspaceBaseBranch
+      _autoGenerateTitle = source._autoGenerateTitle
     }
   }
 
@@ -9954,6 +9963,7 @@ nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message
         case 15: try { try decoder.decodeSingularStringField(value: &_storage._workspaceMode) }()
         case 16: try { try decoder.decodeSingularStringField(value: &_storage._workspaceBranch) }()
         case 17: try { try decoder.decodeSingularStringField(value: &_storage._workspaceBaseBranch) }()
+        case 18: try { try decoder.decodeSingularBoolField(value: &_storage._autoGenerateTitle) }()
         default: break
         }
       }
@@ -10013,6 +10023,9 @@ nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message
       if !_storage._workspaceBaseBranch.isEmpty {
         try visitor.visitSingularStringField(value: _storage._workspaceBaseBranch, fieldNumber: 17)
       }
+      if _storage._autoGenerateTitle != false {
+        try visitor.visitSingularBoolField(value: _storage._autoGenerateTitle, fieldNumber: 18)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -10039,6 +10052,7 @@ nonisolated extension Dieter_V1_CreateConversationRequest: SwiftProtobuf.Message
         if _storage._workspaceMode != rhs_storage._workspaceMode {return false}
         if _storage._workspaceBranch != rhs_storage._workspaceBranch {return false}
         if _storage._workspaceBaseBranch != rhs_storage._workspaceBaseBranch {return false}
+        if _storage._autoGenerateTitle != rhs_storage._autoGenerateTitle {return false}
         return true
       }
       if !storagesAreEqual {return false}
