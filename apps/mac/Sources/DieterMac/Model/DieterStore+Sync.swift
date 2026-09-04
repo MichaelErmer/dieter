@@ -204,11 +204,13 @@ extension DieterStore {
         let projection = OptimisticCardProjection.reconcile(
             cards: global.cards,
             moves: pendingCardMoves,
-            labels: pendingCardLabelUpdates
+            labels: pendingCardLabelUpdates,
+            starts: pendingCardStarts
         )
         global.cards = projection.cards
         pendingCardMoves = projection.moves
         pendingCardLabelUpdates = projection.labels
+        pendingCardStarts = projection.starts
         movingCardIDs = Set(projection.moves.keys)
         labelUpdatingCardIDs = Set(projection.labels.keys)
         for card in global.cards + global.chats {
@@ -769,11 +771,13 @@ extension DieterStore {
         let cardProjection = OptimisticCardProjection.reconcile(
             cards: next.cards,
             moves: pendingCardMoves,
-            labels: pendingCardLabelUpdates
+            labels: pendingCardLabelUpdates,
+            starts: pendingCardStarts
         )
         next.cards = cardProjection.cards
         pendingCardMoves = cardProjection.moves
         pendingCardLabelUpdates = cardProjection.labels
+        pendingCardStarts = cardProjection.starts
         movingCardIDs = Set(cardProjection.moves.keys)
         labelUpdatingCardIDs = Set(cardProjection.labels.keys)
         for card in next.cards + next.chats {

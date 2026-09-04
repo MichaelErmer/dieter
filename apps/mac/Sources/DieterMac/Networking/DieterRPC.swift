@@ -16,6 +16,10 @@ protocol DieterChatPinRPC: Sendable {
     func pinChat(_ request: Dieter_V1_PinChatRequest) async throws -> Dieter_V1_Card
 }
 
+protocol DieterCardStartRPC: Sendable {
+    func startCard(_ request: Dieter_V1_StartCardRequest) async throws -> Dieter_V1_StartCardResponse
+}
+
 /// One long-lived native HTTP/2 gRPC channel to the loopback Dieter server.
 final class DieterRPC: Sendable {
     typealias Transport = HTTP2ClientTransport.Posix
@@ -421,6 +425,13 @@ final class DieterRPC: Sendable {
         try await service.moveCard(request: .init(message: request))
     }
 
+    func startCard(_ request: Dieter_V1_StartCardRequest) async throws -> Dieter_V1_StartCardResponse {
+        try await service.startCard(
+            request: .init(message: request),
+            options: Self.boundedUnaryCallOptions()
+        )
+    }
+
     func setCardLabels(_ request: Dieter_V1_SetCardLabelsRequest) async throws -> Dieter_V1_Card {
         try await service.setCardLabels(request: .init(message: request))
     }
@@ -663,7 +674,7 @@ final class DieterRPC: Sendable {
     }
 }
 
-extension DieterRPC: DieterScheduleRPC, DieterChatPinRPC {}
+extension DieterRPC: DieterScheduleRPC, DieterChatPinRPC, DieterCardStartRPC {}
 
 enum DieterTransportTarget {
     enum HostKind: Equatable {

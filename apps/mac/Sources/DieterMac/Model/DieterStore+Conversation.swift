@@ -731,6 +731,64 @@ extension DieterStore {
         }
     }
 
+    func start(_ card: Dieter_V1_Card) async {
+        guard await ensureProjectConnection(card.projectID) else { return }
+        guard let client = cardStartRPCOverride ?? rpc else { return }
+        let current = state.cards.first(where: { $0.id == card.id }) ?? card
+        let board = board(id: current.boardID)
+        let hasDraftAttachments = conversation?.detail.card.id == current.id &&
+            !(conversation?.conversation.draftAttachments.isEmpty ?? true)
+        guard let optimistic = BoardCardStartPolicy.optimisticCard(
+            current,
+            board: board,
+            hasDraftAttachments: hasDraftAttachments
+        ), pendingCardStarts[current.id] == nil else { return }
+
+        let operationID = UUID()
+        pendingCardStarts[current.id] = .init(
+            operationID: operationID,
+            runningLaneID: optimistic.lane
+        )
+        applyBoardCardMutation(optimistic)
+
+        var request = Dieter_V1_StartCardRequest()
+        request.cardID = current.id
+        request.clientID = syncClientID
+        request.commandID = UUID().uuidString.lowercased()
+        do {
+            let response = try await client.startCard(request)
+            guard pendingCardStarts[current.id]?.operationID == operationID else { return }
+            applyBoardCardMutation(response.card)
+        } catch {
+            guard pendingCardStarts[current.id]?.operationID == operationID else { return }
+            pendingCardStarts.removeValue(forKey: current.id)
+            applyBoardCardMutation(current)
+            show(error)
+        }
+    }
+
+    func applyBoardCardMutation(_ updated: Dieter_V1_Card) {
+        if let index = state.cards.firstIndex(where: { $0.id == updated.id }) {
+            var next = state
+            next.cards[index] = updated
+            state = next
+        }
+        if var cards = navigationCards[updated.projectID],
+           let index = cards.firstIndex(where: { $0.id == updated.id }) {
+            cards[index] = updated
+            navigationCards[updated.projectID] = cards
+        }
+        if var detail = selectedDetail, detail.card.id == updated.id {
+            detail.card = updated
+            selectedDetail = detail
+        }
+        if var snapshot = conversation, snapshot.detail.card.id == updated.id {
+            snapshot.detail.card = updated
+            snapshot.conversation.status = updated.runtime
+            conversation = snapshot
+        }
+    }
+
     func rename(_ card: Dieter_V1_Card, title: String) async {
         guard await ensureProjectConnection(card.projectID) else { return }
         guard let rpc else { return }
