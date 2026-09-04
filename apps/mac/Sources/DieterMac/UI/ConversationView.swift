@@ -841,21 +841,35 @@ struct MessageView: View {
                     ForEach(Array(message.parts.enumerated()), id: \.offset) { _, part in
                         MessagePartView(messageID: message.id, part: part, inUserBubble: true)
                     }
+                    if deliveryState == .failed {
+                        HStack(spacing: 8) {
+                            Label("Send failed", systemImage: "exclamationmark.circle.fill")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(DieterTheme.coral)
+                            Spacer(minLength: 8)
+                            Button("Retry") { Task { await store.retryOutboxItem(message.id) } }
+                            Button("Remove", role: .destructive) { Task { await store.discardOutboxItem(message.id) } }
+                                .accessibilityIdentifier("conversation.failed-message.remove.\(message.id)")
+                        }
+                        .controlSize(.small)
+                    }
                 }
                 .padding(.leading, 13).padding(.trailing, 18).padding(.vertical, 10)
                 .background(DieterTheme.shellDeep.opacity(0.9), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .frame(maxWidth: 620, alignment: .trailing)
             }
-            .opacity(store.isPendingMessage(message.id) ? 0.52 : 1)
+            .opacity(store.isPendingMessage(message.id) && deliveryState != .failed ? 0.52 : 1)
             .overlay(alignment: .bottomTrailing) {
-                MessageDeliveryReceipt(state: deliveryState)
-                    .padding(.trailing, 4)
-                    .padding(.bottom, 4)
+                if deliveryState != .failed {
+                    MessageDeliveryReceipt(state: deliveryState)
+                        .padding(.trailing, 4)
+                        .padding(.bottom, 4)
+                }
             }
             .contextMenu {
                 if deliveryState == .failed {
                     Button("Retry queued message") { Task { await store.retryOutboxItem(message.id) } }
-                    Button("Discard queued message", role: .destructive) { Task { await store.discardOutboxItem(message.id) } }
+                    Button("Remove failed message", role: .destructive) { Task { await store.discardOutboxItem(message.id) } }
                 }
             }
         } else {
@@ -1003,7 +1017,7 @@ private struct MessageDeliveryReceipt: View {
         case .accepted: "Accepted by daemon"
         case .queued: "Queued for the next turn"
         case .synced: "Synced"
-        case .failed: "Send failed; use the context menu to retry or discard"
+        case .failed: "Send failed; retry or remove this message"
         }
     }
 }

@@ -394,17 +394,14 @@ extension DieterStore {
                     navigationCards[card.projectID, default: []].append(card)
                 }
             case .sendMessage:
-                guard let request = try? Dieter_V1_SendMessageRequest(serializedBytes: entry.request),
-                      (selectedCardID ?? selectedChatID) == request.cardID,
-                      var snapshot = conversation,
-                      !snapshot.conversation.messages.contains(where: { $0.id == entry.optimisticID }) else { continue }
-                var message = Dieter_V1_UiMessage()
-                message.id = entry.optimisticID
-                message.role = "user"
-                message.parts = request.parts
-                snapshot.conversation.messages.append(message)
-                conversation = snapshot
+                continue
             }
+        }
+        if let snapshot = conversation {
+            conversation = DieterOutboxPolicy.overlayOptimisticMessages(
+                snapshot,
+                entries: syncDiskState.outbox
+            )
         }
     }
 
@@ -644,6 +641,9 @@ extension DieterStore {
         if !messageIDs.isEmpty, var snapshot = conversation {
             snapshot.conversation.messages.removeAll { messageIDs.contains($0.id) }
             conversation = snapshot
+        }
+        if !messageIDs.isEmpty {
+            olderConversationMessages.removeAll { messageIDs.contains($0.id) }
         }
     }
 

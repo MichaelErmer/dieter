@@ -187,11 +187,15 @@ extension DieterStore {
         refreshedAt: Date? = Date(),
         cache: Bool = true
     ) async {
-        if conversation != snapshot {
-            resetConversationHistory(from: snapshot)
-            conversation = snapshot
+        let presented = DieterOutboxPolicy.overlayOptimisticMessages(
+            snapshot,
+            entries: syncDiskState.outbox
+        )
+        if conversation != presented {
+            resetConversationHistory(from: presented)
+            conversation = presented
         }
-        if selectedDetail != snapshot.detail { selectedDetail = snapshot.detail }
+        if selectedDetail != presented.detail { selectedDetail = presented.detail }
         conversationLoading = false
         conversationSyncing = false
         conversationLastRefreshedAt = refreshedAt
@@ -325,7 +329,10 @@ extension DieterStore {
             } else {
                 olderConversationMessages = []
             }
-            conversation = update.snapshot
+            conversation = DieterOutboxPolicy.overlayOptimisticMessages(
+                update.snapshot,
+                entries: syncDiskState.outbox
+            )
             selectedDetail = update.snapshot.detail
             if olderConversationMessages.isEmpty {
                 conversationHistoryStart = Int(update.snapshot.page.start)
@@ -366,7 +373,10 @@ extension DieterStore {
             }
             conversationHistoryTotal = max(conversationHistoryTotal, Int(update.page.total))
         }
-        conversation = snapshot
+        conversation = DieterOutboxPolicy.overlayOptimisticMessages(
+            snapshot,
+            entries: syncDiskState.outbox
+        )
     }
 
     func sendComposer() async {

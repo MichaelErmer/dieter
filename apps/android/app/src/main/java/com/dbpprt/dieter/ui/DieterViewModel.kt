@@ -969,6 +969,18 @@ class DieterViewModel(
 
     fun discardOutboxItem(id: String) {
         connectionManager.discardOutboxItem(id)
+        _state.update { current ->
+            val conversation = current.conversation?.toBuilder()?.setConversation(
+                current.conversation.conversation.toBuilder()
+                    .clearMessages()
+                    .addAllMessages(current.conversation.conversation.messagesList.filterNot { it.id == id }),
+            )?.build()
+            current.copy(
+                conversation = conversation,
+                olderMessages = current.olderMessages.filterNot { it.id == id },
+            )
+        }
+        _state.value.selectedCardId?.let(::rememberConversation)
         if (_state.value.selectedCardId == id) closeDetail()
     }
 
