@@ -62,6 +62,10 @@ dieter card send --message "Inspect these inputs." \
   --attach screenshot.png --attach notes.pdf <card-id>
 ```
 
+When `--effort` is omitted for a new card or chat, Dieter uses that model's
+`defaultEffort` from the harness registry. Pass `--effort default` to defer to
+the provider's native default instead.
+
 Use `card poll` for one bounded update and `card watch` for JSON Lines streaming.
 Fetch a large tool payload separately with `card tool-output` when the transcript
 contains only its bounded preview.
