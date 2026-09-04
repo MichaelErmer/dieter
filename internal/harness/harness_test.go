@@ -121,16 +121,16 @@ func TestCatalogIncludesCurrentCodexRegistry(t *testing.T) {
 	if !found {
 		t.Fatal("codex harness is missing")
 	}
-	if codex.DefaultModel != "gpt-5.6-sol" || len(codex.Models) != 7 {
+	if codex.DefaultModel != "gpt-5.6-sol" || len(codex.Models) != 8 {
 		t.Fatalf("codex catalog=%#v", codex)
 	}
-	want := []string{"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5", "gpt-5.4", "gpt-5.3-codex", "gpt-5.3-codex-spark"}
+	want := []string{"gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5", "gpt-5.4", "gpt-5.3-codex", "gpt-5.3-codex-spark"}
 	for index, id := range want {
 		if codex.Models[index].ID != id {
 			t.Fatalf("model %d=%q want %q", index, codex.Models[index].ID, id)
 		}
 	}
-	if codex.Effort == nil || codex.Effort.Label != "Reasoning" || len(codex.Effort.Options) != 3 || codex.Models[0].DefaultEffort != "low" {
+	if codex.Effort == nil || codex.Effort.Label != "Reasoning" || len(codex.Effort.Options) != 3 || codex.Models[0].DefaultEffort != "medium" {
 		t.Fatalf("codex effort catalog=%#v", codex)
 	}
 }
