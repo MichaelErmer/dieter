@@ -1998,6 +1998,55 @@ private func historyTextMessage(_ id: String, role: String = "assistant") -> Die
     #expect(try Dieter_V1_SendMessageRequest(serializedBytes: entries[0].request).cardID == "c_server")
 }
 
+@Test func retainedFailedSendKeepsItsOriginalTranscriptPosition() throws {
+    func message(_ id: String, role: String, createdAt: Date) throws -> Dieter_V1_UiMessage {
+        var result = Dieter_V1_UiMessage()
+        result.id = id
+        result.role = role
+        result.metadataJson = try JSONSerialization.data(withJSONObject: [
+            "createdAt": DieterTimestamp.string(from: createdAt),
+        ])
+        return result
+    }
+
+    let failedAt = Date(timeIntervalSince1970: 10)
+    var request = Dieter_V1_SendMessageRequest()
+    request.cardID = "c_chat"
+    var part = Dieter_V1_MessagePart()
+    part.type = "text"
+    part.text = "Older failed command"
+    request.parts = [part]
+    let failed = DieterOutboxEntry(
+        commandID: "failed-command",
+        clientID: "mac",
+        endpointID: "endpoint",
+        kind: .sendMessage,
+        request: try request.serializedData(),
+        optimisticID: "msg_failed",
+        attempts: 1,
+        state: .failed,
+        createdAt: failedAt
+    )
+    var staleTail = Dieter_V1_UiMessage()
+    staleTail.id = "msg_failed"
+    staleTail.role = "user"
+    staleTail.parts = [part]
+    var snapshot = Dieter_V1_ConversationSnapshot()
+    snapshot.detail.card.id = "c_chat"
+    snapshot.conversation.cardID = "c_chat"
+    snapshot.conversation.messages = [
+        try message("msg_running", role: "user", createdAt: Date(timeIntervalSince1970: 20)),
+        try message("msg_answer", role: "assistant", createdAt: Date(timeIntervalSince1970: 30)),
+        staleTail,
+    ]
+
+    let overlaid = DieterOutboxPolicy.overlayOptimisticMessages(snapshot, entries: [failed])
+
+    #expect(overlaid.conversation.messages.map(\.id) == ["msg_failed", "msg_running", "msg_answer"])
+    #expect(overlaid.conversation.messages.first?.parts.first?.text == "Older failed command")
+    #expect(!overlaid.conversation.messages.first!.metadataJson.isEmpty)
+}
+
 @Test func createSuccessMergesAnOptimisticChatWithAnAlreadySynchronizedChat() {
     var synchronized = Dieter_V1_Card()
     synchronized.id = "c_server"
