@@ -37,4 +37,14 @@ class ProviderOptionsTest {
 
         assertEquals("Be concise", providerOptionValue(option, emptyMap()))
     }
+
+    @Test
+    fun onlyMutableOptionsRemainEnabledAfterConversationStarts() {
+        val fastMode = ProviderOption.newBuilder().setId("fast_mode").setMutable(true).build()
+        val sessionMode = ProviderOption.newBuilder().setId("session_mode").build()
+
+        assertEquals(true, providerOptionEnabled(fastMode, conversationLocked = true))
+        assertEquals(false, providerOptionEnabled(sessionMode, conversationLocked = true))
+        assertEquals(true, providerOptionEnabled(sessionMode, conversationLocked = false))
+    }
 }

@@ -109,6 +109,11 @@ dieter card create --project <project-id> --board <board-id> \
   --workspace worktree --format id
 ```
 
+Harness-defined options use repeatable `--provider-option KEY=VALUE` flags.
+For example, Codex chats and tasks can select Fast mode with
+`--provider-option fast_mode=true`; schedules accept the same option and apply
+it to every task they create.
+
 `card start` admits a draft's first turn. `card send` admits a human follow-up.
 Both return without waiting for the agent to finish. Do not replay either just
 because the client disconnected; inspect the card and conversation first.

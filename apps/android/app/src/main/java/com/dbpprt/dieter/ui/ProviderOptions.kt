@@ -39,6 +39,9 @@ internal fun providerOptionValue(
     values: Map<String, String>,
 ): String = values[option.id] ?: option.defaultValue
 
+internal fun providerOptionEnabled(option: ProviderOption, conversationLocked: Boolean): Boolean =
+    !conversationLocked || option.mutable
+
 @Composable
 internal fun ProviderOptionControl(
     option: ProviderOption,

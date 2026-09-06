@@ -4058,6 +4058,7 @@ type ProviderOption struct {
 	Type          string                  `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	DefaultValue  string                  `protobuf:"bytes,5,opt,name=default_value,json=defaultValue,proto3" json:"default_value,omitempty"`
 	Choices       []*ProviderOptionChoice `protobuf:"bytes,6,rep,name=choices,proto3" json:"choices,omitempty"`
+	Mutable       bool                    `protobuf:"varint,7,opt,name=mutable,proto3" json:"mutable,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4132,6 +4133,13 @@ func (x *ProviderOption) GetChoices() []*ProviderOptionChoice {
 		return x.Choices
 	}
 	return nil
+}
+
+func (x *ProviderOption) GetMutable() bool {
+	if x != nil {
+		return x.Mutable
+	}
+	return false
 }
 
 type ProviderOptionChoice struct {
@@ -15304,14 +15312,15 @@ const file_dieter_v1_dieter_proto_rawDesc = "" +
 	"\x06models\x18\x04 \x03(\v2\x17.dieter.v1.HarnessModelR\x06models\x12/\n" +
 	"\x06effort\x18\x05 \x01(\v2\x17.dieter.v1.EffortConfigR\x06effort\x12@\n" +
 	"\fcapabilities\x18\x06 \x03(\v2\x1c.dieter.v1.HarnessCapabilityR\fcapabilities\x123\n" +
-	"\aoptions\x18\a \x03(\v2\x19.dieter.v1.ProviderOptionR\aoptions\"\xca\x01\n" +
+	"\aoptions\x18\a \x03(\v2\x19.dieter.v1.ProviderOptionR\aoptions\"\xe4\x01\n" +
 	"\x0eProviderOption\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x12\n" +
 	"\x04type\x18\x04 \x01(\tR\x04type\x12#\n" +
 	"\rdefault_value\x18\x05 \x01(\tR\fdefaultValue\x129\n" +
-	"\achoices\x18\x06 \x03(\v2\x1f.dieter.v1.ProviderOptionChoiceR\achoices\"@\n" +
+	"\achoices\x18\x06 \x03(\v2\x1f.dieter.v1.ProviderOptionChoiceR\achoices\x12\x18\n" +
+	"\amutable\x18\a \x01(\bR\amutable\"@\n" +
 	"\x14ProviderOptionChoice\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"9\n" +

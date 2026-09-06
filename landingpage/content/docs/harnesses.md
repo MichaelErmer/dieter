@@ -32,6 +32,11 @@ The model, effort, context, capability, and typed provider-option registry is
 selectable models, an effort/thinking scale, and capability flags such as
 subagents and task-plan.
 
+Provider options appear only for harnesses that advertise them. Codex exposes
+`fast_mode` for chats, board tasks, and scheduled task templates. It defaults
+to standard speed and remains changeable between turns; Fast mode uses the
+provider's faster service tier at a higher usage rate.
+
 Override the entire registry with any of:
 
 ```sh

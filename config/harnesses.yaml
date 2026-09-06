@@ -11,6 +11,13 @@ harnesses:
     capabilities:
       - id: task-plan
         level: snapshots
+    options:
+      - id: fast_mode
+        name: Fast mode
+        description: Run supported Codex models faster at a higher usage rate.
+        type: boolean
+        default: "false"
+        mutable: true
     defaultModel: gpt-5.6-sol
     effort:
       label: Reasoning

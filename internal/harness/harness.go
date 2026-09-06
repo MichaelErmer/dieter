@@ -83,6 +83,7 @@ type ProviderOption struct {
 	Type        string                 `json:"type" yaml:"type"`
 	Default     string                 `json:"defaultValue,omitempty" yaml:"default,omitempty"`
 	Choices     []ProviderOptionChoice `json:"choices,omitempty" yaml:"choices,omitempty"`
+	Mutable     bool                   `json:"mutable,omitempty" yaml:"mutable,omitempty"`
 }
 
 type Capability struct {
@@ -371,6 +372,18 @@ func ResolveOptions(adapter Adapter, requested map[string]string) (map[string]st
 		resolved[id] = value
 	}
 	return resolved, nil
+}
+
+// ValidateOptionUpdate permits a provider-defined mutable option to change
+// between turns while keeping session-defining options locked. Both maps must
+// already have been materialized with ResolveOptions.
+func ValidateOptionUpdate(adapter Adapter, current, next map[string]string) error {
+	for _, option := range adapter.Options {
+		if !option.Mutable && current[option.ID] != next[option.ID] {
+			return fmt.Errorf("conversation provider options are locked: %q cannot change", option.ID)
+		}
+	}
+	return nil
 }
 
 func ResolveAdapter(id string, includeMock bool) (Adapter, bool) {

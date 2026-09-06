@@ -671,8 +671,8 @@ func (s *Service) startCard(ref, content string, parts []model.UIMessagePart, pr
 		if resolveErr != nil {
 			return nil, resolveErr
 		}
-		if !providerOptionsEqual(providerOptions, lockedOptions) {
-			return nil, errors.New("conversation provider options are locked")
+		if updateErr := harness.ValidateOptionUpdate(adapter, lockedOptions, providerOptions); updateErr != nil {
+			return nil, updateErr
 		}
 	}
 	if err := s.ensureStartStorage(s.Store.Root, detail.Project.Path); err != nil {
@@ -749,7 +749,7 @@ func (s *Service) startCard(ref, content string, parts []model.UIMessagePart, pr
 			_, err = s.Store.MarkPromptSent(detail.Card.ID)
 		}
 	} else {
-		_, err = s.Store.UpdateCardCache(detail.Card.ID, store.CardCacheInput{Provider: provider, Model: modelName, Effort: &effort, Runtime: "running"})
+		_, err = s.Store.UpdateCardCache(detail.Card.ID, store.CardCacheInput{Provider: provider, Model: modelName, Effort: &effort, ProviderOptions: providerOptions, Runtime: "running"})
 		if err == nil && detail.Card.Scope == model.ConversationScopeBoard && detail.Card.Lane != model.LaneRunning {
 			_, err = s.Store.MoveCard(detail.Card.ID, model.LaneRunning, nil)
 		}
@@ -1297,9 +1297,15 @@ func (s *Service) SubmitCardPartsWithMessageID(ref string, parts []model.UIMessa
 				s.mu.Unlock()
 				return false, resolveErr
 			}
-			if !providerOptionsEqual(requestedOptions, lockedOptions) {
+			if updateErr := harness.ValidateOptionUpdate(adapter, lockedOptions, requestedOptions); updateErr != nil {
 				s.mu.Unlock()
-				return false, errors.New("conversation provider options are locked")
+				return false, updateErr
+			}
+			if !providerOptionsEqual(requestedOptions, lockedOptions) {
+				if _, updateErr := s.Store.UpdateCardCache(card.ID, store.CardCacheInput{ProviderOptions: requestedOptions}); updateErr != nil {
+					s.mu.Unlock()
+					return false, updateErr
+				}
 			}
 		}
 		_, _, err = s.Store.QueueConversationMessagePartsWithID(card.ID, messageID, parts)

@@ -700,6 +700,10 @@ enum ProviderOptionValues {
     static func defaults(for harness: Dieter_V1_Harness?) -> [String: String] {
         Dictionary((harness?.options ?? []).map { ($0.id, $0.defaultValue) }, uniquingKeysWith: { first, _ in first })
     }
+
+    static func isEnabled(_ option: Dieter_V1_ProviderOption, conversationLocked: Bool) -> Bool {
+        !conversationLocked || option.mutable
+    }
 }
 
 struct ProviderOptionFields: View {
@@ -743,10 +747,15 @@ private struct ProviderOptionField: View {
 struct ProviderOptionChips: View {
     let options: [Dieter_V1_ProviderOption]
     @Binding var values: [String: String]
+    var conversationLocked = false
 
     var body: some View {
         ForEach(options, id: \Dieter_V1_ProviderOption.id) { option in
-            ProviderOptionChip(option: option, values: $values)
+            ProviderOptionChip(
+                option: option,
+                values: $values,
+                isEnabled: ProviderOptionValues.isEnabled(option, conversationLocked: conversationLocked)
+            )
         }
     }
 }
@@ -754,6 +763,7 @@ struct ProviderOptionChips: View {
 private struct ProviderOptionChip: View {
     let option: Dieter_V1_ProviderOption
     @Binding var values: [String: String]
+    let isEnabled: Bool
 
     private var currentValue: String { values[option.id, default: option.defaultValue] }
 
@@ -766,7 +776,7 @@ private struct ProviderOptionChip: View {
                     symbol: enabled ? "checkmark.circle.fill" : "circle",
                     showsDisclosure: false
                 )
-            }.buttonStyle(.plain).help(option.description_p)
+            }.buttonStyle(.plain).disabled(!isEnabled).help(option.description_p)
         } else if ["enum", "select"].contains(option.type.lowercased()) {
             Menu {
                 ForEach(option.choices, id: \Dieter_V1_ProviderOptionChoice.value) { choice in
@@ -774,10 +784,10 @@ private struct ProviderOptionChip: View {
                 }
             } label: {
                 DieterChipLabel(title: option.choices.first(where: { $0.value == currentValue })?.name ?? option.name, symbol: "slider.horizontal.3")
-            }.menuStyle(.borderlessButton).fixedSize().help(option.description_p)
+            }.menuStyle(.borderlessButton).fixedSize().disabled(!isEnabled).help(option.description_p)
         } else {
             TextField(option.name, text: Binding(get: { currentValue }, set: { values[option.id] = $0 }))
-                .textFieldStyle(.roundedBorder).frame(width: 130).help(option.description_p)
+                .textFieldStyle(.roundedBorder).frame(width: 130).disabled(!isEnabled).help(option.description_p)
         }
     }
 }

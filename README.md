@@ -290,6 +290,10 @@ Supported models and provider options live in
 An optional model `defaultEffort` is Dieter's default for new conversations and
 overrides the provider-discovered default when that model supports the selected
 level. Pass `--effort default` to explicitly use the provider's native default.
+Codex advertises a mutable `fast_mode` option: native clients expose it for
+chats, board tasks, and scheduled task templates, while the CLI accepts
+`--provider-option fast_mode=true`. Turning it off explicitly selects the
+standard service tier for that conversation.
 
 ## Development
 

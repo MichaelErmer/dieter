@@ -140,6 +140,26 @@ func TestSchedulePersistsValidatedEffortOnCreatedCard(t *testing.T) {
 	}
 }
 
+func TestSchedulePreconfiguresCodexFastModeOnCreatedTask(t *testing.T) {
+	manager, data, project, board := setup(t)
+	schedule, err := manager.Create(store.ScheduleInput{
+		Project: project.ID, Board: board.ID, Name: "Fast work", Cron: "0 9 * * *", Timezone: "UTC",
+		Action: model.ScheduleActionDraft, TitleTemplate: "Fast", PromptTemplate: "Move quickly", Provider: "codex",
+		ProviderOptions: map[string]string{"fast_mode": "true"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err := manager.RunNow(schedule.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	card, err := data.ResolveCard(run.CardID)
+	if err != nil || card.ProviderOptions["fast_mode"] != "true" {
+		t.Fatalf("scheduled card=%#v err=%v", card, err)
+	}
+}
+
 func TestTickArchivesDoneCardsUsingBoardPolicy(t *testing.T) {
 	manager, data, project, board := setup(t)
 	fixed := time.Now().UTC().Add(time.Second)

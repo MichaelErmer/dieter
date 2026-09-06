@@ -1767,6 +1767,8 @@ public nonisolated struct Dieter_V1_ProviderOption: Sendable {
 
   public var choices: [Dieter_V1_ProviderOptionChoice] = []
 
+  public var mutable: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -8475,7 +8477,7 @@ nonisolated extension Dieter_V1_Harness: SwiftProtobuf.Message, SwiftProtobuf._M
 
 nonisolated extension Dieter_V1_ProviderOption: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ProviderOption"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}name\0\u{1}description\0\u{1}type\0\u{3}default_value\0\u{1}choices\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}name\0\u{1}description\0\u{1}type\0\u{3}default_value\0\u{1}choices\0\u{1}mutable\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -8489,6 +8491,7 @@ nonisolated extension Dieter_V1_ProviderOption: SwiftProtobuf.Message, SwiftProt
       case 4: try { try decoder.decodeSingularStringField(value: &self.type) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self.defaultValue) }()
       case 6: try { try decoder.decodeRepeatedMessageField(value: &self.choices) }()
+      case 7: try { try decoder.decodeSingularBoolField(value: &self.mutable) }()
       default: break
       }
     }
@@ -8513,6 +8516,9 @@ nonisolated extension Dieter_V1_ProviderOption: SwiftProtobuf.Message, SwiftProt
     if !self.choices.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.choices, fieldNumber: 6)
     }
+    if self.mutable != false {
+      try visitor.visitSingularBoolField(value: self.mutable, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -8523,6 +8529,7 @@ nonisolated extension Dieter_V1_ProviderOption: SwiftProtobuf.Message, SwiftProt
     if lhs.type != rhs.type {return false}
     if lhs.defaultValue != rhs.defaultValue {return false}
     if lhs.choices != rhs.choices {return false}
+    if lhs.mutable != rhs.mutable {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

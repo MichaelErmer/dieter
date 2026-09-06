@@ -1796,7 +1796,7 @@ private struct ConversationComposer: View {
             ProviderOptionChips(options: harness?.options ?? [], values: Binding(
                 get: { store.composerProviderOptions },
                 set: { store.composerProviderOptions = $0 }
-            ))
+            ), conversationLocked: (store.selectedCard ?? store.selectedDetail?.card)?.initialPromptSentAt.isEmpty == false)
 
             Spacer(minLength: 0)
             if showContext, let usage = ConversationContextUsage.latest(

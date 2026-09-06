@@ -24,3 +24,16 @@ func TestProtoHarnessCatalogDeduplicatesModelEfforts(t *testing.T) {
 		t.Fatalf("unexpected efforts: %#v", efforts)
 	}
 }
+
+func TestProtoHarnessCatalogPreservesMutableProviderOptions(t *testing.T) {
+	catalog := protoHarnessCatalog([]harness.Adapter{{
+		ID: "codex",
+		Options: []harness.ProviderOption{{
+			ID: "fast_mode", Name: "Fast mode", Type: "boolean", Default: "false", Mutable: true,
+		}},
+	}})
+	options := catalog.GetHarnesses()[0].GetOptions()
+	if len(options) != 1 || options[0].GetId() != "fast_mode" || !options[0].GetMutable() {
+		t.Fatalf("provider options=%#v", options)
+	}
+}

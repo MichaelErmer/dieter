@@ -409,7 +409,7 @@ internal fun MessageComposer(
                         ProviderOptionControl(
                             option = option,
                             values = providerOptions,
-                            enabled = !locked,
+                            enabled = providerOptionEnabled(option, locked),
                             onValueChange = { id, next -> providerOptions = providerOptions + (id to next) },
                         )
                     }

@@ -134,6 +134,12 @@ func TestCatalogIncludesCurrentCodexRegistry(t *testing.T) {
 		codex.Models[0].DefaultEffort != "medium" || codex.Models[1].DefaultEffort != "xhigh" {
 		t.Fatalf("codex effort catalog=%#v", codex)
 	}
+	if len(codex.Options) != 1 || codex.Options[0].ID != "fast_mode" || codex.Options[0].Type != "boolean" || codex.Options[0].Default != "false" || !codex.Options[0].Mutable {
+		t.Fatalf("codex options=%#v", codex.Options)
+	}
+	if options, err := ResolveOptions(codex, map[string]string{"fast_mode": "true"}); err != nil || options["fast_mode"] != "true" {
+		t.Fatalf("codex Fast mode options=%#v err=%v", options, err)
+	}
 }
 
 func TestConfiguredEffortValidationIsProviderAndModelAware(t *testing.T) {
@@ -212,6 +218,28 @@ func TestResolveOptionsSupportsAdapterDefinedTypes(t *testing.T) {
 	}
 	if _, err = ResolveOptions(adapter, map[string]string{"unknown": "value"}); err == nil {
 		t.Fatal("unknown provider option was accepted")
+	}
+}
+
+func TestValidateOptionUpdateAllowsOnlyMutableValuesToChange(t *testing.T) {
+	adapter := Adapter{ID: "custom", Options: []ProviderOption{
+		{ID: "fast_mode", Name: "Fast mode", Type: "boolean", Default: "false", Mutable: true},
+		{ID: "session_mode", Name: "Session mode", Type: "enum", Default: "steady", Choices: []ProviderOptionChoice{{Value: "steady", Name: "Steady"}, {Value: "deep", Name: "Deep"}}},
+	}}
+	current, err := ResolveOptions(adapter, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fast, err := ResolveOptions(adapter, map[string]string{"fast_mode": "true"})
+	if err != nil || ValidateOptionUpdate(adapter, current, fast) != nil {
+		t.Fatalf("mutable update=%#v resolveErr=%v validateErr=%v", fast, err, ValidateOptionUpdate(adapter, current, fast))
+	}
+	locked, err := ResolveOptions(adapter, map[string]string{"session_mode": "deep"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = ValidateOptionUpdate(adapter, current, locked); err == nil || !strings.Contains(err.Error(), "locked") {
+		t.Fatalf("immutable update err=%v", err)
 	}
 }
 
