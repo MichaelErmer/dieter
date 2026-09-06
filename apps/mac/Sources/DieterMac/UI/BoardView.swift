@@ -914,6 +914,10 @@ struct BoardCardView: View {
     private var starting: Bool { store.pendingCardStarts[card.id] != nil }
     private var canStart: Bool { BoardCardStartPolicy.canStart(card, board: store.selectedBoard) }
     private var showsRunAction: Bool { canStart || starting }
+    private var runActionAccessibilityLabel: String {
+        let title = card.title.isEmpty ? "card" : card.title
+        return starting ? "Starting \(title)" : "Run \(title)"
+    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -946,7 +950,7 @@ struct BoardCardView: View {
                     }
                     if card.commentCount > 0 { Label("\(card.commentCount)", systemImage: "text.bubble").font(.system(size: 10)).foregroundStyle(DieterTheme.tertiary) }
                     if !card.activeSubagents.isEmpty { Label("\(card.activeSubagents.count)", systemImage: "person.2").font(.system(size: 10)).foregroundStyle(DieterTheme.shell) }
-                    if showsRunAction { Color.clear.frame(width: starting ? 100 : 68, height: 30) }
+                    if showsRunAction { Color.clear.frame(width: 24, height: 24) }
                 }
             }
             .padding(12)
@@ -1008,24 +1012,33 @@ struct BoardCardView: View {
             .animation(.easeOut(duration: 0.14), value: labelDropTargeted)
             }
             .buttonStyle(.plain)
-            if showsRunAction {
+            if showsRunAction && hovering {
                 Button {
                     Task { await store.start(card) }
                 } label: {
-                    HStack(spacing: 5) {
-                        if starting { ProgressView().controlSize(.mini) }
-                        else { Image(systemName: "play.fill").font(.system(size: 9, weight: .bold)) }
-                        Text(starting ? "Starting…" : "Run")
+                    Group {
+                        if starting {
+                            ProgressView().controlSize(.mini).tint(.white).scaleEffect(0.75)
+                        } else {
+                            Image(systemName: "play.fill").font(.system(size: 8, weight: .bold))
+                        }
                     }
+                    .foregroundStyle(.white)
+                    .frame(width: 24, height: 24)
+                    .background(DieterTheme.shellDeep, in: Circle())
+                    .contentShape(Circle())
                 }
-                .buttonStyle(DieterPrimaryButtonStyle())
+                .buttonStyle(.plain)
                 .disabled(starting)
                 .help(starting ? "Starting the saved task" : "Run the saved task and move this card to Running")
+                .accessibilityLabel(runActionAccessibilityLabel)
                 .accessibilityIdentifier("card-run.\(card.id)")
                 .padding(.trailing, 12).padding(.bottom, 12)
+                .transition(.scale(scale: 0.85).combined(with: .opacity))
             }
         }
         .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
         .contextMenu {
             if store.isFailedOutboxItem(card.id) {
                 Button("Retry queued creation") { Task { await store.retryOutboxItem(card.id) } }
