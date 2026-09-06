@@ -102,8 +102,8 @@ dieter card create --project <project-id> --board <board-id> \
   --lane todo --title "Implement recovery" --prompt-file task.md \
   --workspace worktree --format id
 
-# Story-only quick task: GPT Spark generates the persisted title while the
-# normal card defaults remain unchanged.
+# Story-only quick task: GPT Spark generates a 4–6 word persisted title while
+# the normal card defaults remain unchanged.
 dieter card create --project <project-id> --board <board-id> \
   --lane todo --auto-title --prompt "Add keyboard navigation" \
   --workspace worktree --format id

@@ -820,7 +820,7 @@ message CreateConversationRequest {
   string workspace_mode = 15;
   string workspace_branch = 16;
   string workspace_base_branch = 17;
-  // Generate the persisted title from prompt with Dieter's fast title model.
+  // Generate a 4–6 word persisted title from prompt with Dieter's fast title model.
   // Clients may still send a local placeholder in title for optimistic UI.
   bool auto_generate_title = 18;
 }

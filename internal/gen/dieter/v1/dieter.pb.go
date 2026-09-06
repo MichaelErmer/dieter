@@ -6105,7 +6105,7 @@ type CreateConversationRequest struct {
 	WorkspaceMode       string                 `protobuf:"bytes,15,opt,name=workspace_mode,json=workspaceMode,proto3" json:"workspace_mode,omitempty"`
 	WorkspaceBranch     string                 `protobuf:"bytes,16,opt,name=workspace_branch,json=workspaceBranch,proto3" json:"workspace_branch,omitempty"`
 	WorkspaceBaseBranch string                 `protobuf:"bytes,17,opt,name=workspace_base_branch,json=workspaceBaseBranch,proto3" json:"workspace_base_branch,omitempty"`
-	// Generate the persisted title from prompt with Dieter's fast title model.
+	// Generate a 4–6 word persisted title from prompt with Dieter's fast title model.
 	// Clients may still send a local placeholder in title for optimistic UI.
 	AutoGenerateTitle bool `protobuf:"varint,18,opt,name=auto_generate_title,json=autoGenerateTitle,proto3" json:"auto_generate_title,omitempty"`
 	unknownFields     protoimpl.UnknownFields

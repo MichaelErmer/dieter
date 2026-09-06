@@ -229,8 +229,8 @@ dieter project open ~/Development/my-project
 dieter daemon start
 ```
 
-Create a story-only quick task with the same daemon-side GPT Spark title
-generation used by the native Kanban popover:
+Create a story-only quick task with the same daemon-side GPT Spark 4–6 word
+title generation used by the native Kanban popover:
 
 ```sh
 dieter card create --project PROJECT --board BOARD --lane todo \

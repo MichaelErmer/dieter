@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -297,10 +298,14 @@ func (f *fakeRunner) Run(_ context.Context, request harness.Request, emit func(h
 	if f.err != nil {
 		return f.err
 	}
+	response := "done"
+	if request.ConfiguredModel == quickTaskTitleModel {
+		response = "Add Keyboard Board Navigation"
+	}
 	chunks := []string{
 		`{"type":"start","messageId":"assistant"}`,
 		`{"type":"text-start","id":"text"}`,
-		`{"type":"text-delta","id":"text","delta":"done"}`,
+		`{"type":"text-delta","id":"text","delta":` + strconv.Quote(response) + `}`,
 		`{"type":"text-end","id":"text"}`,
 		`{"type":"finish","finishReason":"stop","messageMetadata":{"createdAt":"2026-08-12T12:00:00Z","usage":{"inputTokens":120,"outputTokens":30,"totalTokens":150},"contextWindowTokens":1000}}`,
 	}
@@ -640,7 +645,7 @@ func TestCreateQuickTaskGeneratesTitleWithSparkAndKeepsConversationDefaults(t *t
 	if err != nil {
 		t.Fatal(err)
 	}
-	if card.Title != "done" || card.InitialPrompt != "Add keyboard navigation to every Kanban lane." {
+	if card.Title != "Add Keyboard Board Navigation" || card.InitialPrompt != "Add keyboard navigation to every Kanban lane." {
 		t.Fatalf("card=%#v", card)
 	}
 	if card.Provider != "codex" || card.Model != "gpt-5.6-sol" || card.Lane != model.LaneTodo || card.WorkspaceMode != model.WorkspaceModeWorktree {
@@ -653,7 +658,7 @@ func TestCreateQuickTaskGeneratesTitleWithSparkAndKeepsConversationDefaults(t *t
 	if request.Harness != "codex" || request.ConfiguredModel != quickTaskTitleModel || request.Effort != "high" || !strings.Contains(request.Prompt, "keyboard navigation") {
 		t.Fatalf("title request=%#v", request)
 	}
-	if request.ProjectPath == project.Path || !strings.Contains(request.Instructions, "do not use tools") {
+	if request.ProjectPath == project.Path || !strings.Contains(request.Instructions, "exactly one plain-text line of 4 to 6 words") || !strings.Contains(request.Instructions, "do not use tools") {
 		t.Fatalf("title generation was not isolated: %#v", request)
 	}
 	if _, statErr := os.Stat(request.ProjectPath); !errors.Is(statErr, os.ErrNotExist) {
@@ -665,9 +670,15 @@ func TestNormalizeQuickTaskTitleRemovesModelFormattingAndBoundsLength(t *testing
 	if got := normalizeQuickTaskTitle("  ## Title: “Add keyboard board navigation.”\nExtra explanation  "); got != "Add keyboard board navigation" {
 		t.Fatalf("normalized title=%q", got)
 	}
-	long := strings.Repeat("accessible ", 12)
-	if got := normalizeQuickTaskTitle(long); len([]rune(got)) > quickTaskTitleMaxRunes || strings.HasSuffix(got, " ") {
-		t.Fatalf("bounded title=%q (%d runes)", got, len([]rune(got)))
+	if got := normalizeQuickTaskTitle("Make every Kanban lane fully accessible to keyboard users"); got != "Make every Kanban lane fully accessible" {
+		t.Fatalf("six-word title=%q", got)
+	}
+	if got := normalizeQuickTaskTitle("Fix keyboard focus"); got != "" {
+		t.Fatalf("short title was accepted: %q", got)
+	}
+	long := strings.Repeat("accessiblekeyboardnavigation ", 6)
+	if got := normalizeQuickTaskTitle(long); got != "" {
+		t.Fatalf("overlong title was accepted: %q (%d runes)", got, len([]rune(got)))
 	}
 }
 

@@ -121,7 +121,7 @@ func TestDaemonCLIControlsLocalDaemonEndToEnd(t *testing.T) {
 		ID    string `json:"id"`
 		Title string `json:"title"`
 	}
-	if err := json.Unmarshal([]byte(quickJSON), &quick); err != nil || quick.ID == "" || quick.Title != "done" {
+	if err := json.Unmarshal([]byte(quickJSON), &quick); err != nil || quick.ID == "" || quick.Title != "Add Keyboard Board Navigation" {
 		t.Fatalf("quick task JSON=%q parsed=%#v err=%v", quickJSON, quick, err)
 	}
 	runDaemonCLI(t, client, output, "card", "comment", "--message", "CLI annotation", card.ID)

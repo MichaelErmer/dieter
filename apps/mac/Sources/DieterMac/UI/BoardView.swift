@@ -563,7 +563,7 @@ private struct QuickTaskPopover: View {
                     .background(DieterTheme.shellDeep.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Quick task").font(.system(size: 15, weight: .semibold))
-                    Text("Enter the story. GPT Spark writes the title.")
+                    Text("Enter the story. GPT Spark writes a 4–6 word title.")
                         .font(.system(size: 11)).foregroundStyle(DieterTheme.tertiary)
                 }
                 Spacer()

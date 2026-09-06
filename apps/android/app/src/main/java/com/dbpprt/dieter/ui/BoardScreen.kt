@@ -974,7 +974,7 @@ internal fun QuickTaskPopover(
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Quick task", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                        Text("Enter the story. GPT Spark writes the title.", color = DieterMuted, fontSize = 11.sp)
+                        Text("Enter the story. GPT Spark writes a 4–6 word title.", color = DieterMuted, fontSize = 11.sp)
                     }
                 }
                 OutlinedTextField(

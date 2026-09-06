@@ -2447,7 +2447,7 @@ public nonisolated struct Dieter_V1_CreateConversationRequest: @unchecked Sendab
     set {_uniqueStorage()._workspaceBaseBranch = newValue}
   }
 
-  /// Generate the persisted title from prompt with Dieter's fast title model.
+  /// Generate a 4–6 word persisted title from prompt with Dieter's fast title model.
   /// Clients may still send a local placeholder in title for optimistic UI.
   public var autoGenerateTitle: Bool {
     get {_storage._autoGenerateTitle}
